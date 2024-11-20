@@ -10,7 +10,7 @@
         android:id="@+id/text_student_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="StudentName"
+        android:text="@string/studentname"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,7 +20,7 @@
         android:id="@+id/text_student_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="StudentId"
+        android:text="@string/studentid"
         android:textSize="20sp"
         android:textStyle="italic"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,7 +34,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_delete_24" />
+        app:srcCompat="@drawable/baseline_delete_24"
+        tools:ignore="ContentDescription" />
 
     <ImageView
         android:id="@+id/image_edit"
@@ -44,6 +45,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/image_remove"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_edit_24" />
+        app:srcCompat="@drawable/baseline_edit_24"
+        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
