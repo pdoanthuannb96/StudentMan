@@ -1,15 +1,17 @@
 package vn.edu.hust.studentman
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
+import android.view.ContextMenu
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
 import android.widget.Button
+import android.widget.ListView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
+
   val students = mutableListOf(
     StudentModel("Nguyễn Văn An", "SV001"),
     StudentModel("Trần Thị Bảo", "SV002"),
@@ -32,64 +34,87 @@ class MainActivity : AppCompatActivity() {
     StudentModel("Phạm Thị Tuyết", "SV019"),
     StudentModel("Lê Văn Vũ", "SV020")
   )
-  val studentAdapter = StudentAdapter(students)
+
+  lateinit var studentAdapter: StudentAdapter
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
-    findViewById<RecyclerView>(R.id.recycler_view_students).run {
-      adapter = studentAdapter
-      layoutManager = LinearLayoutManager(this@MainActivity)
+
+    studentAdapter = StudentAdapter(
+      this,
+      students,
+      onEditClick = { student ->
+        openEditStudentFragment(student)
+      },
+      onRemoveClick = { student ->
+        students.remove(student)
+        studentAdapter.notifyDataSetChanged()
+        Toast.makeText(this, "Removed ${student.studentName}", Toast.LENGTH_SHORT).show()
+      }
+    )
+
+    val listView = findViewById<ListView>(R.id.list_view_students)
+    listView.adapter = studentAdapter
+
+    registerForContextMenu(listView)
+
+    listView.setOnItemClickListener { _, _, position, _ ->
+      val student = students[position]
+      openEditStudentFragment(student)
     }
+
     findViewById<Button>(R.id.btn_add_new).setOnClickListener {
-      val intent = Intent(this, AddStudentActivity::class.java)
-      startActivityForResult(intent, 200) // Mã yêu cầu là 200
+      openAddStudentFragment()
     }
+  }
+
+  private fun openAddStudentFragment() {
+    val transaction = supportFragmentManager.beginTransaction()
+    transaction.replace(R.id.container, AddStudentFragment())
+    transaction.addToBackStack(null)
+    transaction.commit()
+  }
+
+  private fun openEditStudentFragment(student: StudentModel) {
+    val transaction = supportFragmentManager.beginTransaction()
+    val fragment = EditStudentFragment.newInstance(student)
+    transaction.replace(R.id.container, fragment)
+    transaction.addToBackStack(null)
+    transaction.commit()
+  }
+
+  fun addStudent(newStudent: StudentModel) {
+    students.add(newStudent)
+    studentAdapter.notifyDataSetChanged()  // Cập nhật lại ListView
+  }
+
+  override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
+    super.onCreateContextMenu(menu, v, menuInfo)
+    menu.setHeaderTitle("Options")
+    menu.add(0, 0, 0, "Edit")
+    menu.add(0, 1, 1, "Remove")
   }
 
   override fun onContextItemSelected(item: MenuItem): Boolean {
-    val position = item.groupId
-    return when (item.itemId) {
+    val info = item.menuInfo as AdapterView.AdapterContextMenuInfo
+    val student = students[info.position]
+
+    when (item.itemId) {
       0 -> {
-        val student = students[position]
-        val intent = Intent(this, EditStudentActivity::class.java).apply {
-          putExtra("STUDENT_NAME", student.studentName)
-          putExtra("STUDENT_ID", student.studentId)
-          putExtra("POSITION", position)
-        }
-        startActivityForResult(intent, 100)
-        true
+        // Edit option selected
+        openEditStudentFragment(student)
+        return true
       }
       1 -> {
-        studentAdapter.removeStudent(position)
-        true
+        // Remove option selected
+        students.remove(student)
+        studentAdapter.notifyDataSetChanged()
+        Toast.makeText(this, "Removed ${student.studentName}", Toast.LENGTH_SHORT).show()
+        return true
       }
-      else -> super.onContextItemSelected(item)
     }
+    return super.onContextItemSelected(item)
   }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    if (requestCode == 100 && resultCode == Activity.RESULT_OK) {
-      val newName = data?.getStringExtra("NEW_NAME") ?: ""
-      val newId = data?.getStringExtra("NEW_ID") ?: ""
-      val position = data?.getIntExtra("POSITION", -1) ?: -1
-
-      if (position != -1) {
-        students[position].studentName = newName
-        students[position].studentId = newId
-        studentAdapter.notifyItemChanged(position)
-      }
-    }
-    if (requestCode == 200 && resultCode == Activity.RESULT_OK) {
-      val newName = data?.getStringExtra("NEW_NAME") ?: ""
-      val newId = data?.getStringExtra("NEW_ID") ?: ""
-
-      if (newName.isNotEmpty() && newId.isNotEmpty()) {
-        students.add(StudentModel(newName, newId))
-        studentAdapter.notifyItemInserted(students.size - 1)
-      }
-    }
-  }
-
-
 }
+

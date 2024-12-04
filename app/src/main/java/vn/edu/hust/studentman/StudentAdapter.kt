@@ -1,44 +1,62 @@
 package vn.edu.hust.studentman
 
-import android.view.ContextMenu
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.BaseAdapter
+import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
+import vn.edu.hust.studentman.R
+import vn.edu.hust.studentman.StudentModel
 
-class StudentAdapter(val students: MutableList<StudentModel>) : RecyclerView.Adapter<StudentAdapter.StudentViewHolder>() {
+class StudentAdapter(
+  private val context: Context,
+  private val students: List<StudentModel>,
+  private val onEditClick: (StudentModel) -> Unit,
+  private val onRemoveClick: (StudentModel) -> Unit
+) : BaseAdapter() {
 
-  class StudentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
-    val textStudentName: TextView = itemView.findViewById(R.id.text_student_name)
-    val textStudentId: TextView = itemView.findViewById(R.id.text_student_id)
-
-    init {
-      itemView.setOnCreateContextMenuListener(this)
-    }
-
-    override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
-      menu.add(adapterPosition, 0, 0, "Edit")
-      menu.add(adapterPosition, 1, 1, "Remove")
-    }
+  override fun getCount(): Int {
+    return students.size
   }
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StudentViewHolder {
-    val itemView = LayoutInflater.from(parent.context).inflate(R.layout.layout_student_item, parent, false)
-    return StudentViewHolder(itemView)
+  override fun getItem(position: Int): Any {
+    return students[position]
   }
 
-  override fun getItemCount(): Int = students.size
+  override fun getItemId(position: Int): Long {
+    return position.toLong()
+  }
 
-  override fun onBindViewHolder(holder: StudentViewHolder, position: Int) {
+  override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    val view: View
+    val holder: ViewHolder
+
+    if (convertView == null) {
+      val inflater = LayoutInflater.from(context)
+      view = inflater.inflate(R.layout.layout_student_item, parent, false)
+
+      holder = ViewHolder()
+      holder.nameTextView = view.findViewById(R.id.text_student_name)
+      holder.idTextView = view.findViewById(R.id.text_student_id)
+
+      view.tag = holder
+    } else {
+      view = convertView
+      holder = view.tag as ViewHolder
+    }
+
     val student = students[position]
-    holder.textStudentName.text = student.studentName
-    holder.textStudentId.text = student.studentId
+    holder.nameTextView.text = student.studentName
+    holder.idTextView.text = student.studentId
+
+    return view
   }
 
-  fun removeStudent(position: Int) {
-    students.removeAt(position)
-    notifyItemRemoved(position)
-    notifyItemRangeChanged(position, students.size)
+  private class ViewHolder {
+    lateinit var nameTextView: TextView
+    lateinit var idTextView: TextView
   }
 }
